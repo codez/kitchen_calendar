@@ -8,6 +8,7 @@ require 'bundler/setup'
 require 'date'
 require 'prawn'
 require 'prawn/measurement_extensions'
+require_relative 'holidays'
 
 PAGE_SIZE = [900.mm, 162.mm].freeze
 MARGIN = 12.mm
@@ -17,6 +18,7 @@ FONT_SIZE_TITLE = 40
 FONT_SIZE_WDAY = 20
 FONT_SIZE_DATE = 18
 FONT_SIZE_CONTENT = 12
+FONT_SIZE_HOLIDAY = 9
 LEADING = 4
 
 LINE_WIDTH = 1.5
@@ -56,8 +58,11 @@ WEEKDAY_NAMES = %w[
   Sa
 ].freeze
 
+
 year = (ARGV[0] || Date.today.year).to_i
+holidays = Holiday.dates(year)
 filename = "calendar-#{year}.pdf"
+
 font = Dir.glob('./*.ttf').first || DEFAULT_FONT
 
 Prawn::Document.generate(filename, page_size: PAGE_SIZE, margin: MARGIN) do
@@ -71,35 +76,43 @@ Prawn::Document.generate(filename, page_size: PAGE_SIZE, margin: MARGIN) do
     # month title
     text_box(MONTH_NAMES.fetch(month), at: [0, TITLE_TOP], size: FONT_SIZE_TITLE)
 
+    stroke_vertical_line(COLUMN_HEIGHT, 0, at: 0)
     date = Date.new(year, month, 1)
     while date.month == month
-      offset = (date.day - 1) * COLUMN_WIDTH
-      stroke_vertical_line(COLUMN_HEIGHT, 0, at: offset)
+      column_left = (date.day - 1) * COLUMN_WIDTH
+      text_left = column_left + PADDING_TEXT
+      stroke_vertical_line(COLUMN_HEIGHT, 0, at: column_left + COLUMN_WIDTH)
 
       # weekend background
       if [0, 6].include?(date.wday)
-        fill_rectangle([offset + PADDING_BOX, COLUMN_HEIGHT],
+        fill_rectangle([column_left + PADDING_BOX, COLUMN_HEIGHT],
                        COLUMN_WIDTH - PADDING_BOX,
                        FONT_SIZE_WDAY + LEADING)
         fill_color(WHITE) # for weekday label
       end
       # weekday label
       text_box(WEEKDAY_NAMES.fetch(date.wday),
-               at: [offset + PADDING_TEXT, COLUMN_HEIGHT - LEADING],
+               at: [text_left, COLUMN_HEIGHT - LEADING],
                size: FONT_SIZE_WDAY)
       # date label
       fill_color(COLOR) # change back
       text_box("#{date.day}.#{date.month}.",
-               at: [offset + PADDING_TEXT, COLUMN_HEIGHT - 2 * LEADING - FONT_SIZE_WDAY],
+               at: [text_left, COLUMN_HEIGHT - 2 * LEADING - FONT_SIZE_WDAY],
                size: FONT_SIZE_DATE)
+      # holiday name
+      holiday = holidays.find { |h| h == date }
+      if holiday
+        text_box(holiday.name,
+                 at: [text_left, COLUMN_HEIGHT - 3 * LEADING - FONT_SIZE_WDAY - FONT_SIZE_DATE],
+                 size: FONT_SIZE_HOLIDAY)
+      end
       # Z: (für Znacht)
       text_box('Z:',
-               at: [offset + PADDING_TEXT, Z_TOP],
+               at: [text_left, Z_TOP],
                size: FONT_SIZE_CONTENT)
 
       date = date.next
     end
-    stroke_vertical_line(COLUMN_HEIGHT, 0, at: date.prev_day.day * COLUMN_WIDTH)
   end
 end
 
