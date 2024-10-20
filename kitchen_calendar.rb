@@ -10,6 +10,8 @@ require 'prawn'
 require 'prawn/measurement_extensions'
 require_relative 'holidays'
 
+# Constants to configure layout and font
+
 PAGE_SIZE = [900.mm, 162.mm].freeze
 MARGIN = 12.mm
 
@@ -27,6 +29,10 @@ COLUMN_WIDTH = 28.mm
 COLUMN_HEIGHT = 105.mm
 PADDING_BOX = 3.mm
 PADDING_TEXT = 4.mm
+
+WEEKDAY_TOP = COLUMN_HEIGHT - LEADING
+DATE_TOP = WEEKDAY_TOP - LEADING - FONT_SIZE_WDAY
+HOLIDAY_TOP = DATE_TOP - LEADING - FONT_SIZE_DATE
 Z_TOP = 20.mm
 
 COLOR = '2a3773'
@@ -60,9 +66,8 @@ WEEKDAY_NAMES = %w[
 
 
 year = (ARGV[0] || Date.today.year).to_i
-holidays = Holiday.dates(year)
+holidays = holiday_dates(year)
 filename = "calendar-#{year}.pdf"
-
 font = Dir.glob('./*.ttf').first || DEFAULT_FONT
 
 Prawn::Document.generate(filename, page_size: PAGE_SIZE, margin: MARGIN) do
@@ -92,19 +97,19 @@ Prawn::Document.generate(filename, page_size: PAGE_SIZE, margin: MARGIN) do
       end
       # weekday label
       text_box(WEEKDAY_NAMES.fetch(date.wday),
-               at: [text_left, COLUMN_HEIGHT - LEADING],
+               at: [text_left, WEEKDAY_TOP],
                size: FONT_SIZE_WDAY)
       # date label
       fill_color(COLOR) # change back
       text_box("#{date.day}.#{date.month}.",
-               at: [text_left, COLUMN_HEIGHT - 2 * LEADING - FONT_SIZE_WDAY],
+               at: [text_left, DATE_TOP],
                size: FONT_SIZE_DATE)
       # holiday name
-      holiday = holidays.find { |h| h == date }
-      if holiday
-        text_box(holiday.name,
-                 at: [text_left, COLUMN_HEIGHT - 3 * LEADING - FONT_SIZE_WDAY - FONT_SIZE_DATE],
-                 size: FONT_SIZE_HOLIDAY)
+      if holidays.key?(date)
+        text_box(holidays[date],
+                 at: [text_left, HOLIDAY_TOP],
+                 size: FONT_SIZE_HOLIDAY,
+                 width: COLUMN_WIDTH - PADDING_TEXT)
       end
       # Z: (für Znacht)
       text_box('Z:',
