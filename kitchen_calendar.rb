@@ -10,12 +10,30 @@ require 'prawn'
 require 'prawn/measurement_extensions'
 require_relative 'holidays'
 
+year = (ARGV.last || Date.today.year).to_i
+a3 = ARGV.first == '--a3'
+holidays = holiday_dates(year)
+filename = "calendar-#{year}#{a3 ? '-a3' : ''}.pdf"
+font = Dir.glob('./*.ttf').first || 'Helvetica'
+
 # Constants to configure layout and font
 
-PAGE_SIZE = [900.mm, 162.mm].freeze
-MARGIN = 12.mm
+if a3
+  PAGE_SIZE = [420.mm, 297.mm].freeze
+  MARGIN = [12.mm, 3.mm, 153.mm, 3.mm]
+  COLUMN_WIDTH = 26.mm
+  PADDING_BOX = 2.mm
+  PADDING_TEXT = 3.mm
+  COLUMN_HEIGHT = 98.mm
+else
+  PAGE_SIZE = [900.mm, 162.mm].freeze
+  MARGIN = 12.mm
+  COLUMN_WIDTH = 28.mm
+  PADDING_BOX = 3.mm
+  PADDING_TEXT = 4.mm
+  COLUMN_HEIGHT = 105.mm
+end
 
-DEFAULT_FONT = 'Helvetica'
 FONT_SIZE_TITLE = 40
 FONT_SIZE_WDAY = 20
 FONT_SIZE_DATE = 18
@@ -24,11 +42,7 @@ FONT_SIZE_HOLIDAY = 9
 LEADING = 4
 
 LINE_WIDTH = 1.5
-TITLE_TOP = 133.mm
-COLUMN_WIDTH = 28.mm
-COLUMN_HEIGHT = 105.mm
-PADDING_BOX = 3.mm
-PADDING_TEXT = 4.mm
+TITLE_TOP = COLUMN_HEIGHT + 28.mm
 
 WEEKDAY_TOP = COLUMN_HEIGHT - LEADING
 DATE_TOP = WEEKDAY_TOP - LEADING - FONT_SIZE_WDAY
@@ -64,11 +78,7 @@ WEEKDAY_NAMES = %w[
   Sa
 ].freeze
 
-
-year = (ARGV[0] || Date.today.year).to_i
-holidays = holiday_dates(year)
-filename = "calendar-#{year}.pdf"
-font = Dir.glob('./*.ttf').first || DEFAULT_FONT
+MIDDLE_OF_MONTH = 17
 
 Prawn::Document.generate(filename, page_size: PAGE_SIZE, margin: MARGIN) do
   font(font)
@@ -78,13 +88,33 @@ Prawn::Document.generate(filename, page_size: PAGE_SIZE, margin: MARGIN) do
 
   (1..12).each do |month|
     start_new_page if month > 1
+    if a3
+      mask(:line_width) do # cut marker
+        line_width(0.5)
+        stroke_horizontal_line(0, 5.mm, at: -15.mm)
+        stroke_horizontal_line(409.mm, 414.mm, at: -15.mm)
+      end
+    end
+
     # month title
     text_box(MONTH_NAMES.fetch(month), at: [0, TITLE_TOP], size: FONT_SIZE_TITLE)
 
     stroke_vertical_line(COLUMN_HEIGHT, 0, at: 0)
     date = Date.new(year, month, 1)
     while date.month == month
-      column_left = (date.day - 1) * COLUMN_WIDTH
+      if a3 && date.day == MIDDLE_OF_MONTH
+        start_new_page
+        stroke_vertical_line(COLUMN_HEIGHT, 0, at: 0)
+        mask(:line_width) do # cut marker
+          line_width(0.5)
+          stroke_horizontal_line(0, 5.mm, at: -15.mm)
+          stroke_horizontal_line(409.mm, 414.mm, at: -15.mm)
+        end
+      end
+
+      offset = date.day - 1
+      offset -= MIDDLE_OF_MONTH - 1 if a3 && date.day >= MIDDLE_OF_MONTH
+      column_left = offset * COLUMN_WIDTH
       text_left = column_left + PADDING_TEXT
       stroke_vertical_line(COLUMN_HEIGHT, 0, at: column_left + COLUMN_WIDTH)
 

@@ -8,7 +8,7 @@ Install the latest version of Ruby, then run `bundle install`.
 
 ## Usage
 
-`./kitchen_calendar.rb [year]`
+`./kitchen_calendar.rb [--a3] [year]`
 
 ## Configuration
 
@@ -18,4 +18,4 @@ Place a TTF font in the same directory to change the font face.
 ## Copyright
 
 kitchen_calendar is released under the terms of the MIT License.
-Copyright 2024 by Pascal Zumkehr. See LICENSE for further information.
+Copyright 2025 by Pascal Zumkehr. See LICENSE for further information.
