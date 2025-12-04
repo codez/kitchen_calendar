@@ -1,22 +1,21 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    bigdecimal (3.1.8)
-    matrix (0.4.2)
-    pdf-core (0.10.0)
-    prawn (2.5.0)
-      matrix (~> 0.4)
-      pdf-core (~> 0.10.0)
-      ttfunk (~> 1.8)
-    ttfunk (1.8.0)
-      bigdecimal (~> 3.1)
+    matrix (0.4.3)
+    pdf-core (0.9.0)
+    prawn (2.4.0)
+      pdf-core (~> 0.9.0)
+      ttfunk (~> 1.7)
+    ttfunk (1.7.0)
 
 PLATFORMS
   arm64-darwin-23
   ruby
 
 DEPENDENCIES
-  prawn
+  matrix
+  prawn (~> 2.4.0)
+  ttfunk (~> 1.7.0)
 
 BUNDLED WITH
    2.5.22

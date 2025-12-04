@@ -182,15 +182,15 @@ class KitchenCalendarA3 < KitchenCalendar
   private
 
   def page_size = [420.mm, 297.mm].freeze
-  def margin = 3.mm
+  def margin = 5.mm
   def font_size_holiday = 8.5
-  def column_width = 26.mm
+  def column_width = 25.6.mm
   def column_height = 98.mm
   def padding_text = 3.mm
   def padding_box = 2.mm
   def middle = page_size[1] / 2.0 - margin
   def bounds_width = page_size[0] - 2 * margin
-  def bounds_height = column_height + 9.mm
+  def bounds_height = column_height + 7.mm
   def title_top = middle + margin + bounds_height + 24.mm
 
   def render_dates(dates)
